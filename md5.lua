@@ -197,6 +197,7 @@ end
 
 -- convert little-endian 32-bit int to a 4-char string
 local function lei2str(i)
+  if ffi then return ffi.string(ffi.new("int[1]", i), 4) end
   local f=function (s) return char( bit_and( bit_rshift(i, s), 255)) end
   return f(0)..f(8)..f(16)..f(24)
 end
@@ -212,6 +213,7 @@ end
 
 -- convert raw string to little-endian int
 local function str2lei(s)
+  if ffi then return ffi.cast("int*", ffi.new("char[4]", s))[0] end
   local v=0
   for i = #s,1,-1 do
     v = v*256 + byte(s, i)
