@@ -242,25 +242,14 @@ end
 
 
 -- cut up a string in little-endian ints of given size
-local function cut_le_str(s)
-  return {
-    str2lei(sub(s, 1, 4)),
-    str2lei(sub(s, 5, 8)),
-    str2lei(sub(s, 9, 12)),
-    str2lei(sub(s, 13, 16)),
-    str2lei(sub(s, 17, 20)),
-    str2lei(sub(s, 21, 24)),
-    str2lei(sub(s, 25, 28)),
-    str2lei(sub(s, 29, 32)),
-    str2lei(sub(s, 33, 36)),
-    str2lei(sub(s, 37, 40)),
-    str2lei(sub(s, 41, 44)),
-    str2lei(sub(s, 45, 48)),
-    str2lei(sub(s, 49, 52)),
-    str2lei(sub(s, 53, 56)),
-    str2lei(sub(s, 57, 60)),
-    str2lei(sub(s, 61, 64)),
-  }
+local function cut_le_str(s,...)
+  local o, r = 1, {}
+  local args = {...}
+  for i=1, #args do
+    table.insert(r, str2lei(sub(s, o, o + args[i] - 1)))
+    o = o + args[i]
+  end
+  return r
 end
 
 local swap = function (w) return str2bei(lei2str(w)) end
@@ -380,7 +369,7 @@ local function md5_update(self, s)
   self.pos = self.pos + #s
   s = self.buf .. s
   for ii = 1, #s - 63, 64 do
-    local X = cut_le_str(sub(s,ii,ii+63))
+    local X = cut_le_str(sub(s,ii,ii+63),4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4)
     assert(#X == 16)
     X[0] = table.remove(X,1) -- zero based!
     self.a,self.b,self.c,self.d = transform(self.a,self.b,self.c,self.d,X)
@@ -388,7 +377,6 @@ local function md5_update(self, s)
   self.buf = sub(s, math.floor(#s/64)*64 + 1, #s)
   return self
 end
-
 local function md5_finish(self)
   local msgLen = self.pos
   local padLen = 56 - msgLen % 64
